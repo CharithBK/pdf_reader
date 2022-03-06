@@ -67,13 +67,15 @@ class _MyHomePageState extends State<MyHomePage> {
     dummySearchList.addAll(duplicateItems);
     if (query.isNotEmpty) {
       List dummyListData = [];
-      dummySearchList.forEach((item) {
-        final titleLower = item['description'].toLowerCase();
-        final queryLower = query.toLowerCase();
-        if (titleLower.contains(queryLower)) {
-          dummyListData.add(item);
-        }
-      });
+      if (dummySearchList != null) {
+        dummySearchList.forEach((item) {
+          final titleLower = item['description'].toLowerCase();
+          final queryLower = query.toLowerCase();
+          if (titleLower.contains(queryLower)) {
+            dummyListData.add(item);
+          }
+        });
+      }
       setState(() {
         items.clear();
         items.addAll(dummyListData);
@@ -89,10 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadData() async {
     dynamic file = await PDFApi.getPdf();
+    print('file==>$file');
     setState(() {
       list = file;
       List tempArray = [];
-      list.forEach((el) => {tempArray.add(el)});
+      if (list != null) {
+        list.forEach((el) => {tempArray.add(el)});
+      }
       duplicateItems = tempArray;
       items.addAll(tempArray);
       isLoading = false;

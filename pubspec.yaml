@@ -43,6 +43,7 @@ dependencies:
   fluttertoast: ^8.0.8
   dio: ^4.0.4
   open_file: ^3.2.1
+  permission_handler: ^9.0.2
 
 dev_dependencies:
   flutter_test:
