@@ -8,6 +8,7 @@ import 'package:open_file/open_file.dart';
 import 'package:dio/dio.dart';
 import 'package:pdf_reader/api/pdf_api.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart';
 
 class SecondRoute extends StatefulWidget {
   final dynamic formData;
@@ -29,8 +30,9 @@ class _SecondRouteState extends State<SecondRoute> {
   void initState() {
     super.initState();
     isLoading = true;
+
     loadPdf();
-    getStoragePermission();
+    //getStoragePermission();
   }
 
   getStoragePermission() async {
@@ -46,8 +48,10 @@ class _SecondRouteState extends State<SecondRoute> {
   }
 
   loadPdf() async {
+
     //print('loadPdf===>');
     pdfFile = await PDFApi.loadNetwork(widget.formData['url']);
+
     print('status===>$pdfFile');
     setState(() {
       isLoading = false;
@@ -57,7 +61,6 @@ class _SecondRouteState extends State<SecondRoute> {
   @override
   Widget build(BuildContext context) {
     //loadPdf();
-
     final ButtonStyle style =
         TextButton.styleFrom(primary: Theme.of(context).colorScheme.onPrimary);
     var date = DateTime.now().millisecondsSinceEpoch.toString();
@@ -139,7 +142,7 @@ class _SecondRouteState extends State<SecondRoute> {
 Future openFile({required String url, String? fileName}) async {
   final file = await downloadFile(url, fileName!);
 
-  //print('file==>$file');
+  print('file==>$file');
   if (file == null) return;
   Fluttertoast.showToast(
     msg: '$fileName Downloaded', // message
@@ -161,14 +164,16 @@ Future<File?> downloadFile(String url, String name) async {
   //final appStorage = await getApplicationDocumentsDirectory();
   //storage/emulated/0/Download/
   //final file = File('${appStorage.path}/$fileName.pdf');
+  //final file = File('D:\\Private\\$fileName.pdf');
   final file = File('/storage/emulated/0/Download/$fileName.pdf');
 
   //print('file==>$file');
   var encoded = Uri.encodeFull(url);
-  final encodedUrl = encoded.replaceAll('http', 'https');
-
+  //final encodedUrl = encoded.replaceAll('http', 'https');
+  print('encoded==>$encoded');
+  //print('encodedUrl==>$encodedUrl');
   try {
-    final response = await Dio().get(encodedUrl,
+    final response = await Dio().get(encoded,
         options: Options(
           responseType: ResponseType.bytes,
           followRedirects: false,

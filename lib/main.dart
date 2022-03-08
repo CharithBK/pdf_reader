@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf_reader/page/pdf_view.dart';
-
+import 'package:universal_html/html.dart' as html;
 import 'api/pdf_api.dart';
 import 'widget/search_widget.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'PDF Reader',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -54,11 +56,13 @@ class _MyHomePageState extends State<MyHomePage> {
   String query = '';
   bool isLoading = false;
   bool isLoadingPdf = false;
+  bool isWebMobile = false;
 
   @override
   void initState() {
     super.initState();
     isLoading = true;
+
     _loadData();
   }
 
@@ -91,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadData() async {
     dynamic file = await PDFApi.getPdf();
-    print('file==>$file');
+    //print('file==>$file');
     setState(() {
       list = file;
       List tempArray = [];
@@ -135,6 +139,8 @@ class _MyHomePageState extends State<MyHomePage> {
     dynamic list,
   ) {
     var shouldAbsorb = isLoadingPdf ? true : false;
+
+    var encoded = '';
     return Row(
       children: <Widget>[
         Expanded(
@@ -160,8 +166,41 @@ class _MyHomePageState extends State<MyHomePage> {
                                 isLoadingPdf = true;
                               }),
                               url = items[index]['url'],
-                              file = await PDFApi.loadNetwork(url),
-                              openPDF(items[index], file),
+                              encoded = Uri.encodeFull(url),
+                              if (!kIsWeb)
+                                {
+                                  file = await PDFApi.loadNetwork(url),
+                                  print('file==>$file'),
+                                  openPDF(items[index], file),
+                                }
+                              else
+                                {
+                                  print('encoded===>$encoded'),
+                                  html.window.open(encoded, "_blank"),
+                                  html.Url.revokeObjectUrl(encoded),
+                                  setState(() {
+                                    isLoadingPdf = false;
+                                  }),
+                                }
+                              // if (Platform.isAndroid)
+                              //   {
+                              //     file = await PDFApi.loadNetwork(url),
+                              //     openPDF(items[index], file),
+                              //   }
+                              // else if (Platform.isIOS)
+                              //   {
+                              //     file = await PDFApi.loadNetwork(url),
+                              //     openPDF(items[index], file),
+                              //   }
+                              // else
+                              //   {
+                              //     print('encoded===>$encoded'),
+                              //     html.window.open(encoded, "_blank"),
+                              //     html.Url.revokeObjectUrl(encoded),
+                              //     setState(() {
+                              //       isLoadingPdf = false;
+                              //     }),
+                              //   }
                             },
                             child: Card(
                               child: Padding(

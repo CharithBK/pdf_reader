@@ -9,25 +9,24 @@ import 'package:path_provider/path_provider.dart';
 
 class PDFApi {
   static Future getPdf() async {
-   try{
-     //var url = "https://oshan263.000webhostapp.com/getData.php";
-     final response = await http.get(Uri.parse("https://oshan263.000webhostapp.com/getData.php"),
-         headers: {
-           "Accept": "application/json",
-           "Access-Control-Allow-Origin": "*"
-         }
-     );
-     print('response===>$response');
-     var data1 = jsonDecode(response.body);
-     return data1;
-   }catch(e){
-     print('exception===>$e');
-   }
+    try {
+      //var url = "https://oshan263.000webhostapp.com/getData.php";
+      final response = await http.get(
+        Uri.parse("https://oshan263.000webhostapp.com/getData.php"),
+      );
 
+      var data1 = jsonDecode(response.body);
+      //print('response===>$data1');
+      return data1;
+    } catch (e) {
+      print('exception===>$e');
+    }
   }
 
   static Future<File> loadNetwork(String url) async {
+    //var encoded = Uri.encodeFull(url);
     final response = await http.get(Uri.parse(url));
+
     final bytes = response.bodyBytes;
 
     return _storeFile(url, bytes);
@@ -35,10 +34,14 @@ class PDFApi {
 
   static Future<File> _storeFile(String url, List<int> bytes) async {
     final filename = basename(url);
+    //String fileName = filename2.replaceAll(' ', '');
     final dir = await getApplicationDocumentsDirectory();
-
     final file = File('${dir.path}/$filename');
-    await file.writeAsBytes(bytes, flush: true);
+    //final file = File('D:\\download\\$fileName');
+    print('file===>$file');
+    final dirs = await file.writeAsBytes(bytes, flush: true);
+    //print('dirs===>$dirs');
+
     return file;
   }
 }
