@@ -45,6 +45,7 @@ dependencies:
   open_file: ^3.2.1
   permission_handler: ^9.0.2
   universal_html: ^2.0.8
+  pdfx: ^2.0.1+1
 
 dev_dependencies:
   flutter_test:
