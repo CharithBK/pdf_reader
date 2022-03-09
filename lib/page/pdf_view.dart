@@ -170,8 +170,6 @@ Future<File?> downloadFile(String url, String name) async {
   //print('file==>$file');
   var encoded = Uri.encodeFull(url);
   //final encodedUrl = encoded.replaceAll('http', 'https');
-  print('encoded==>$encoded');
-  //print('encodedUrl==>$encodedUrl');
   try {
     final response = await Dio().get(encoded,
         options: Options(
