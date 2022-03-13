@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadData() async {
     dynamic file = await PDFApi.getPdf();
-    //print('file==>$file');
+    print('file==>$file');
     setState(() {
       list = file;
       List tempArray = [];

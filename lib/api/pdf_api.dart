@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'dart:io';
-
+import 'dart:io' show Platform;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -33,15 +33,20 @@ class PDFApi {
   }
 
   static Future<File> _storeFile(String url, List<int> bytes) async {
-    final filename = basename(url);
-    //String fileName = filename2.replaceAll(' ', '');
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/$filename');
-    //final file = File('D:\\download\\$fileName');
-    print('file===>$file');
-    final dirs = await file.writeAsBytes(bytes, flush: true);
-    //print('dirs===>$dirs');
-
-    return file;
+    if (Platform.isWindows) {
+      final filename2 = basename(url);
+      String fileName = filename2.replaceAll(' ', '');
+      final dir = await getApplicationSupportDirectory();
+      final file = File('${dir.path}\\$fileName');
+      final dirs = await file.writeAsBytes(bytes, flush: true);
+      return file;
+    } else {
+      final filename = basename(url);
+      //String fileName = filename2.replaceAll(' ', '');
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$filename');
+      final dirs = await file.writeAsBytes(bytes, flush: true);
+      return file;
+    }
   }
 }

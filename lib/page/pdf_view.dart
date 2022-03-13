@@ -6,7 +6,9 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf_reader/api/pdf_api.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
 
@@ -48,10 +50,9 @@ class _SecondRouteState extends State<SecondRoute> {
   }
 
   loadPdf() async {
-
     //print('loadPdf===>');
     pdfFile = await PDFApi.loadNetwork(widget.formData['url']);
-
+    //https://www.ultradeep.co.za/tvet-lite/Afrikaans/2014/SAKE-AFRIKAANS-24-NOV-2014-MEMO.pdf
     print('status===>$pdfFile');
     setState(() {
       isLoading = false;
@@ -61,6 +62,10 @@ class _SecondRouteState extends State<SecondRoute> {
   @override
   Widget build(BuildContext context) {
     //loadPdf();
+    // final pdfController = PdfController(
+    //   document: PdfDocument.openAsset('assets/Afrikaans1646644732541.pdf'),
+    // );
+    print('pdfController===>$pdfFile');
     final ButtonStyle style =
         TextButton.styleFrom(primary: Theme.of(context).colorScheme.onPrimary);
     var date = DateTime.now().millisecondsSinceEpoch.toString();
@@ -88,21 +93,26 @@ class _SecondRouteState extends State<SecondRoute> {
                       openFile(
                           url: widget.formData['url'],
                           fileName: widget.formData['title'] + date);
-                      Fluttertoast.showToast(
-                        msg: 'Downloading ${widget.formData['description']} PDF',
-                        // message
-                        toastLength: Toast.LENGTH_SHORT,
-                        // length
-                        gravity: ToastGravity.BOTTOM, // location
-                        // duration
-                      );
+                      if (!Platform.isWindows) {
+                        Fluttertoast.showToast(
+                          msg:
+                              'Downloading ${widget.formData['description']} PDF',
+                          // message
+                          toastLength: Toast.LENGTH_SHORT,
+                          // length
+                          gravity: ToastGravity.BOTTOM, // location
+                          // duration
+                        );
+                      }
+
                       Future.delayed(const Duration(seconds: 6), () {
                         setState(() {
-                          Navigator.of(context).pushReplacement(MaterialPageRoute(
-                              builder: (context) => SecondRoute(
-                                formData: widget.formData,
-                                file: widget.file,
-                              )));
+                          Navigator.of(context)
+                              .pushReplacement(MaterialPageRoute(
+                                  builder: (context) => SecondRoute(
+                                        formData: widget.formData,
+                                        file: widget.file,
+                                      )));
                           isLoadingPdf = false;
                         });
                         //Navigator.pop(context);
@@ -142,14 +152,17 @@ class _SecondRouteState extends State<SecondRoute> {
 Future openFile({required String url, String? fileName}) async {
   final file = await downloadFile(url, fileName!);
 
-  print('file==>$file');
+  //print('file==>$file');
   if (file == null) return;
-  Fluttertoast.showToast(
-    msg: '$fileName Downloaded', // message
-    toastLength: Toast.LENGTH_SHORT, // length
-    gravity: ToastGravity.BOTTOM, // location
-    // duration
-  );
+  if (!Platform.isWindows) {
+    Fluttertoast.showToast(
+      msg: '$fileName Downloaded', // message
+      toastLength: Toast.LENGTH_SHORT, // length
+      gravity: ToastGravity.BOTTOM, // location
+      // duration
+    );
+  }
+
   final _result = await OpenFile.open(file.path);
   //print('_result==>$_result');
   dynamic res = _result.message;
@@ -158,20 +171,16 @@ Future openFile({required String url, String? fileName}) async {
 }
 
 Future<File?> downloadFile(String url, String name) async {
-  String fileName = name.replaceAll(' ', '');
-  //print('fileName==>$fileName');
-  //String fileName2 = fileName1.replaceAll('-', '');
-  //final appStorage = await getApplicationDocumentsDirectory();
-  //storage/emulated/0/Download/
-  //final file = File('${appStorage.path}/$fileName.pdf');
-  //final file = File('D:\\Private\\$fileName.pdf');
-  final file = File('/storage/emulated/0/Download/$fileName.pdf');
-
-  //print('file==>$file');
+  final File file;
+  String fileName1 = name.replaceAll(' ', '');
+  String fileName2 = fileName1.replaceAll('-', '');
+  if (Platform.isWindows) {
+    final appStorage = await getApplicationDocumentsDirectory();
+    file = File('${appStorage.path}\\$fileName2.pdf');
+  } else {
+    file = File('/storage/emulated/0/Download/$fileName2.pdf');
+  }
   var encoded = Uri.encodeFull(url);
-  //final encodedUrl = encoded.replaceAll('http', 'https');
-  print('encoded==>$encoded');
-  //print('encodedUrl==>$encodedUrl');
   try {
     final response = await Dio().get(encoded,
         options: Options(
