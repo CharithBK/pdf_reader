@@ -46,6 +46,7 @@ dependencies:
   permission_handler: ^9.0.2
   universal_html: ^2.0.8
   pdfx: ^2.0.1+1
+  flutter_platform_alert: ^0.2.2
 
 dev_dependencies:
   flutter_test:

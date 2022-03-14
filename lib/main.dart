@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +9,7 @@ import 'package:universal_html/html.dart' as html;
 import 'api/pdf_api.dart';
 import 'widget/search_widget.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
 void main() {
   runApp(const MyApp());
@@ -95,7 +99,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadData() async {
     dynamic file = await PDFApi.getPdf();
-    print('file==>$file');
     setState(() {
       list = file;
       List tempArray = [];
@@ -157,25 +160,62 @@ class _MyHomePageState extends State<MyHomePage> {
                       itemCount: items.length,
                       itemBuilder: (context, int index) {
                         dynamic url;
+                        dynamic pdfName;
                         dynamic file;
+                        dynamic clickedButton;
                         return AbsorbPointer(
                           absorbing: shouldAbsorb,
                           child: GestureDetector(
                             onTap: () async => {
-                              setState(() {
-                                isLoadingPdf = true;
-                              }),
                               url = items[index]['url'],
                               encoded = Uri.encodeFull(url),
                               if (!kIsWeb)
                                 {
-                                  file = await PDFApi.loadNetwork(url),
-                                  print('file==>$file'),
-                                  openPDF(items[index], file),
+                                  if (Platform.isWindows)
+                                    {
+                                      pdfName = items[index]['description']
+                                          .replaceAll(' ', ''),
+                                      clickedButton = await FlutterPlatformAlert
+                                          .showCustomAlert(
+                                        windowTitle: 'Download PDF',
+                                        text:
+                                            'Do you want to download $pdfName',
+                                        positiveButtonTitle: "Yes",
+                                        negativeButtonTitle: "No",
+                                      ),
+                                      if (clickedButton ==
+                                          CustomButton.positiveButton)
+                                        {
+                                          setState(() {
+                                            isLoadingPdf = true;
+                                          }),
+                                          await PDFApi.loadNetwork(url)
+                                              .then((value) async => {
+                                                    setState(() {
+                                                      isLoadingPdf = false;
+                                                    }),
+                                                    await FlutterPlatformAlert
+                                                        .showCustomAlert(
+                                                            windowTitle:
+                                                                'PDF Downloaded',
+                                                            text: '',
+                                                            neutralButtonTitle:
+                                                                'Ok')
+                                                  }),
+                                        }
+                                    }
+                                  else
+                                    {
+                                      setState(() {
+                                        isLoadingPdf = true;
+                                      }),
+                                      file = await PDFApi.loadNetwork(url),
+                                      openPDF(items[index], file),
+                                    }
                                 }
                               else
                                 {
-                                  print('encoded===>$encoded'),
+                                  //print('encoded===>$encoded'),
                                   html.window.open(encoded, "_blank"),
                                   html.Url.revokeObjectUrl(encoded),
                                   setState(() {
@@ -223,16 +263,31 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  openPDF(items, file) {
+  openPDF(items, file) async {
     setState(() {
       isLoadingPdf = false;
     });
-
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SecondRoute(
-              formData: items,
-              file: file,
-            )));
+    if (!Platform.isWindows) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SecondRoute(
+                formData: items,
+                file: file,
+              )));
+    }
+    // else {
+    //   String pdfName = items['description'].replaceAll(' ', '');
+    //   final clickedButton = await FlutterPlatformAlert.showCustomAlert(
+    //     windowTitle: 'Download PDF',
+    //     text: 'Do you want to download $pdfName',
+    //     positiveButtonTitle: "Yes",
+    //     negativeButtonTitle: "No",
+    //   );
+    //   if (clickedButton == CustomButton.positiveButton) {
+    //     setState(() {
+    //       isLoadingPdf = true;
+    //     });
+    //   }
+    // }
   }
 
   Widget _buildSearch() => SearchWidget(
