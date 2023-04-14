@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
@@ -12,20 +13,97 @@ import 'package:path_provider/path_provider.dart';
 
 class PDFApi {
   static Future getPdf() async {
+    final Uri url = Uri.parse("https://tvetpapers.co.za/getData.php");
     try {
-      //var url = "https://oshan263.000webhostapp.com/getData.php";
-      final response = await http.get(
-        Uri.parse("https://oshan263.000webhostapp.com/getData.php"),
-      );
+      final response = await http.get(url);
 
-      var data1 = jsonDecode(response.body);
-      //print('response===>$data1');
-      return data1;
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to get data from server');
+      }
     } catch (e) {
-      print('exception===>$e');
+      throw Exception('Failed to connect to server');
     }
   }
+  static Future<Map<String, dynamic>> checkUser(String username, String password) async {
+    final apiUrl = Uri.parse("https://low-cal-boost.000webhostapp.com/checkUser.php");
+    final headers = {'Content-Type': 'application/json'};
 
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: headers,
+        body: json.encode({
+          'username': username,
+          'password': password,
+        }),
+      );
+      final data = json.decode(response.body);
+      return data;
+      // if (response.statusCode == 200) {
+      //   final data = json.decode(response.body);
+      //   return data;
+      // } else {
+      //   throw Exception('Failed to login user.');
+      // }
+    } catch (e) {
+      print('Exception: $e');
+      throw Exception('Failed to login user.');
+    }
+  }
+  static Future<Map<String, dynamic>> registerUser(BuildContext context,String username, String password, String selectedSubscription) async {
+    final apiUrl = Uri.parse("https://low-cal-boost.000webhostapp.com/register.php");
+    final headers = {'Content-Type': 'application/json'};
+    print(selectedSubscription);
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: headers,
+        body: json.encode({
+          'username': username,
+          'password': password,
+          'type': selectedSubscription,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 409) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        throw Exception('Failed to register user.');
+      }
+    } catch (e) {
+      print('Exception: $e');
+      throw Exception('Failed to register user.');
+    }
+  }
+  static Future<Map<String, dynamic>> login(String username, String password) async {
+    final apiUrl = Uri.parse("https://low-cal-boost.000webhostapp.com/login.php");
+    final headers = {'Content-Type': 'application/json'};
+    print('username: $username');
+    print('password: $password');
+    try {
+      final response = await http.post(
+        apiUrl,
+        headers: headers,
+        body: json.encode({
+          'username': username,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        throw Exception('Failed to login user.');
+      }
+    } catch (e) {
+      print('Exception: $e');
+      throw Exception('Failed to login user.');
+    }
+  }
   static Future<File> loadNetwork(String url) async {
     //var encoded = Uri.encodeFull(url);
     final response = await http.get(Uri.parse(url));
@@ -34,7 +112,6 @@ class PDFApi {
 
     return _storeFile(url, bytes);
   }
-
   static Future<File> _storeFile(String url, List<int> bytes) async {
     if (Platform.isWindows) {
       final filename2 = basename(url);
@@ -74,7 +151,6 @@ class PDFApi {
     //print('res==>$res');
     return res;
   }
-
   static Future<File?> downloadFile(String url, String name) async {
     final File file;
     String fileName1 = name.replaceAll(' ', '');
